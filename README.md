@@ -1,20 +1,40 @@
 # WAZOBIA
 
-WAZOBIA is an original Nigerian open-world action game for **PC and Android**, built with Godot 3.x. WAZOBIA is the owner/brand of the game universe; playable locations use their real Nigerian city names.
+WAZOBIA is an original Nigerian open-world action game built with **Godot 3.x**. WAZOBIA is the owner/brand of the game universe; playable locations use their real Nigerian city names.
 
-## Version 1 — playable vertical slice
+## Platform direction
 
-### Included
+WAZOBIA is **Android-first** for the first release.
+
+The game is designed to be friendly to Android emulators on PC, with keyboard/mouse controls alongside touch controls. A native PC build can be considered later without changing the core account/world architecture.
+
+## Current foundation — Build 0.2
+
+### Boot and lobby
+- Cinematic-style loading screen foundation
+- WAZOBIA title and build information
+- Main lobby
+- Continue
+- New Game
+- Create Room UI
+- Join Room UI
+- Friends UI foundation
+- Profile UI foundation
+- Settings UI foundation
+- Store UI foundation
+
+### Character and world
 - Character creation: name + gender
 - Starting-city selection
 - Lagos, Warri, Benin City, Port Harcourt and Abuja
 - City-specific spawn positions
-- Procedural 3D city prototype with roads and buildings
+- Asset-integrated 3D building environment using the repository GLB library
+- Procedural roads and ground
 - Third-person player controller
-- PC WASD + sprint controls
+- PC keyboard controls
 - Android touch movement controls
 - Drivable vehicle prototype
-- Vehicle enter/exit interaction
+- Vehicle interaction
 - Civilian NPCs
 - Mission marker and mission state
 - Money and mission rewards
@@ -22,15 +42,33 @@ WAZOBIA is an original Nigerian open-world action game for **PC and Android**, b
 - Police pursuit NPCs
 - Lightweight raycast combat
 - Health system
-- Local save data
+- Local continuation save
+
+### Multiplayer architecture foundation
+The lobby already reflects the intended online model:
+
+```text
+WAZOBIA Android Client
+        |
+        +-- Account / Profile
+        |
+        +-- Multiplayer Room
+        |
+        +-- Shared World Session
+        |
+        +-- Cloud Save
+        |
+        +-- Google Play Billing
+```
+
+The current Create Room and Join Room screens are **UI/architecture foundations**, not a live internet multiplayer service yet. The authoritative server, account authentication, cloud database and real-time room transport are separate production layers.
 
 ## Controls
 
-### PC
+### PC / Android emulator
 - **W/A/S/D** — move
 - **Shift** — sprint
 - **E** — interact / enter vehicle
-- **F** — exit vehicle
 - **Space** — fire
 
 ### Android
@@ -38,35 +76,50 @@ WAZOBIA is an original Nigerian open-world action game for **PC and Android**, b
 - **USE** button
 - **FIRE** button
 
-## Core V1 loop
+## Core gameplay loop
 
-Create character → choose Nigerian city → spawn → explore → reach mission marker → activate mission → take a vehicle → evade police → return to marker → receive money → save progress.
+Create character → choose Nigerian city → spawn → explore → find opportunities → complete missions → earn money → build reputation → acquire vehicles/properties/businesses → travel and play with friends.
 
-## Production roadmap
+## Current production direction
 
-V1 is intentionally a vertical slice. Future production layers will replace the procedural prototype with detailed city maps while keeping the same player/profile architecture.
+The procedural building placeholders are being replaced progressively with real GLB environment assets already stored in `Assets/`. Lightweight collision proxies are retained around imported buildings to keep the first Android-focused environment manageable.
 
-Planned systems:
-- Detailed Nigerian city maps and landmarks
-- Better characters and animations
-- Traffic and pedestrian systems
-- Multiple vehicles
+### Asset categories already entering the repository
+- Buildings
+- Skyscrapers
+- Bridge components
+- Construction props
+- Awnings
+- Barriers
+- Lighting/details
+- Other environment pieces
+
+## Planned production systems
+
+- Detailed Nigerian city districts and landmarks
+- Proper Nigerian characters and animations
+- Traffic and pedestrian simulation
+- Multiple vehicle classes including taxis, buses and motorcycles
 - Weapons and inventory
 - Shops and businesses
 - Police vehicles and escalating wanted levels
 - Mission chains and story chapters
 - Properties and economy
 - City-to-city travel
-- Audio, music and dialogue
+- Friends and online accounts
+- Authoritative room/session multiplayer
+- Cloud save and cross-device continuation
+- Google Play Billing for Android digital purchases
+- Rewarded advertising
+- Audio, music, dialogue and Nigerian voice/language work
 - Low-end Android optimization
-- PC controller support
-- Android APK/AAB and PC release builds
+- Native PC release later if justified
 
 ## Engine
 
 Godot 3.x
 
-## Platforms
+## First release target
 
-- Windows / PC
 - Android
+- Android emulator / PC compatibility
