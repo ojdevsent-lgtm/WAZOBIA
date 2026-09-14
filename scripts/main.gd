@@ -129,6 +129,8 @@ func spawn_city():
     clear_screen()
     mission_state = "available"
     wanted = 0
+    police_units.clear()
+    current_vehicle = null
     world_root = Spatial.new()
     world_root.name = selected_city.replace(" ", "_")
     add_child(world_root)
@@ -347,13 +349,13 @@ func create_touch_controls():
     interact.modulate.a = 0.7
     interact.connect("pressed", self, "interact")
     hud.add_child(interact)
-    var shoot = Button.new()
-    shoot.text = "FIRE"
-    shoot.rect_position = Vector2(1120, 620)
-    shoot.rect_size = Vector2(100, 70)
-    shoot.modulate.a = 0.7
-    shoot.connect("pressed", self, "shoot")
-    hud.add_child(shoot)
+    var shoot_button = Button.new()
+    shoot_button.text = "FIRE"
+    shoot_button.rect_position = Vector2(1120, 620)
+    shoot_button.rect_size = Vector2(100, 70)
+    shoot_button.modulate.a = 0.7
+    shoot_button.connect("pressed", self, "shoot")
+    hud.add_child(shoot_button)
 
 func _touch(kind, value):
     if player == null: return
@@ -366,8 +368,10 @@ func _process(delta):
     if player == null: return
     if Input.is_key_pressed(KEY_E): interact()
     if Input.is_key_pressed(KEY_SPACE): shoot()
+    var stars = ""
+    for i in range(wanted): stars += "★"
     if status_label:
-        status_label.text = "WAZOBIA\n%s  |  %s\n%s — %s\nMONEY: ₦%d   HEALTH: %d   WANTED: %s" % [player_name, player_gender, selected_city, city_data[selected_city]["district"], money, player.health, "★".repeat(wanted)]
+        status_label.text = "WAZOBIA\n%s  |  %s\n%s — %s\nMONEY: ₦%d   HEALTH: %d   WANTED: %s" % [player_name, player_gender, selected_city, city_data[selected_city]["district"], money, player.health, stars]
     if mission_label:
         if mission_state == "available": mission_label.text = "MISSION: Meet the contact at the yellow marker. Press E.\nReward: ₦%d" % mission_reward
         elif mission_state == "active": mission_label.text = "MISSION: Steal a vehicle and bring it to the yellow marker.\nPress E near a vehicle to enter."
@@ -408,10 +412,9 @@ func enter_vehicle(vehicle):
 func shoot():
     if player == null or current_vehicle != null: return
     wanted = min(5, wanted + 1)
-    # V1 uses a short forward ray for lightweight combat.
     var from = camera.global_transform.origin
     var to = from + -camera.global_transform.basis.z * 45
-    var hit = get_world().direct_space_state.intersect_ray(from, to, [player])
+    var hit = world_root.get_world().direct_space_state.intersect_ray(from, to, [player])
     if hit and hit.collider.has_method("take_damage"):
         hit.collider.take_damage(25)
 
