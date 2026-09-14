@@ -1,35 +1,66 @@
 # WAZOBIA
 
-WAZOBIA is an original Nigerian open-world action game for **PC and Android**, built with Godot 3.x.
+WAZOBIA is an original Nigerian open-world action game for **PC and Android**, built with Godot 3.x. WAZOBIA is the owner/brand of the game universe; playable locations use their real Nigerian city names.
 
-## Version 1 foundation
+## Version 1 — playable vertical slice
 
-The first build establishes the core architecture:
+### Included
+- Character creation: name + gender
+- Starting-city selection
+- Lagos, Warri, Benin City, Port Harcourt and Abuja
+- City-specific spawn positions
+- Procedural 3D city prototype with roads and buildings
+- Third-person player controller
+- PC WASD + sprint controls
+- Android touch movement controls
+- Drivable vehicle prototype
+- Vehicle enter/exit interaction
+- Civilian NPCs
+- Mission marker and mission state
+- Money and mission rewards
+- Wanted level
+- Police pursuit NPCs
+- Lightweight raycast combat
+- Health system
+- Local save data
 
-- Character creation
-- Character name and gender
-- Nigerian city selection
-- City-specific spawn
-- Initial 3D city environment
-- Player movement
-- PC keyboard controls
-- Expandable city/world architecture
+## Controls
 
-### Starting cities in Version 1
+### PC
+- **W/A/S/D** — move
+- **Shift** — sprint
+- **E** — interact / enter vehicle
+- **F** — exit vehicle
+- **Space** — fire
 
-- Lagos
-- Warri
-- Benin City
-- Port Harcourt
-- Abuja
+### Android
+- On-screen movement controls
+- **USE** button
+- **FIRE** button
 
-The selected city is saved in the active game state and determines where the character enters the world.
+## Core V1 loop
 
-## Direction
+Create character → choose Nigerian city → spawn → explore → reach mission marker → activate mission → take a vehicle → evade police → return to marker → receive money → save progress.
 
-WAZOBIA is the owner/creator brand of the game universe. Cities in the game use their Nigerian names rather than a fictional "Wazobia City".
+## Production roadmap
 
-The architecture is designed to expand into vehicles, NPCs, missions, combat, police systems, businesses, economy, travel between cities, mobile controls, and larger city maps.
+V1 is intentionally a vertical slice. Future production layers will replace the procedural prototype with detailed city maps while keeping the same player/profile architecture.
+
+Planned systems:
+- Detailed Nigerian city maps and landmarks
+- Better characters and animations
+- Traffic and pedestrian systems
+- Multiple vehicles
+- Weapons and inventory
+- Shops and businesses
+- Police vehicles and escalating wanted levels
+- Mission chains and story chapters
+- Properties and economy
+- City-to-city travel
+- Audio, music and dialogue
+- Low-end Android optimization
+- PC controller support
+- Android APK/AAB and PC release builds
 
 ## Engine
 
