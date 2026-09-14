@@ -1,8 +1,8 @@
 extends Node
 
-# WAZOBIA V1 - Nigerian open-world vertical slice.
-# Systems: character creation, city spawn, third-person movement, vehicles,
-# civilians, police/wanted level, mission, money, shooting, saving, mobile HUD.
+# WAZOBIA - Godot 3.x Android-first open-world foundation.
+# This file owns the boot flow, lobby, character creation, asset-integrated
+# prototype city, HUD, local continuation, room UI foundation and gameplay loop.
 
 var player
 var camera
@@ -20,6 +20,8 @@ var mission_reward = 25000
 var mission_marker
 var current_vehicle = null
 var police_units = []
+var boot_progress = 0.0
+var boot_message = "Preparing WAZOBIA..."
 var city_data = {
     "Lagos": {"ground": Color(0.16, 0.34, 0.20), "district": "Mainland", "spawn": Vector3(0, 1, 24)},
     "Warri": {"ground": Color(0.20, 0.34, 0.18), "district": "Effurun Road", "spawn": Vector3(0, 1, 24)},
@@ -27,11 +29,24 @@ var city_data = {
     "Port Harcourt": {"ground": Color(0.12, 0.32, 0.28), "district": "GRA", "spawn": Vector3(0, 1, 24)},
     "Abuja": {"ground": Color(0.32, 0.30, 0.25), "district": "Central Area", "spawn": Vector3(0, 1, 24)}
 }
+var building_assets = [
+    "res://Assets/building-a.glb", "res://Assets/building-b.glb", "res://Assets/building-c.glb",
+    "res://Assets/building-d.glb", "res://Assets/building-e.glb", "res://Assets/building-f.glb",
+    "res://Assets/building-g.glb", "res://Assets/building-h.glb", "res://Assets/building-i.glb",
+    "res://Assets/building-j.glb", "res://Assets/building-k.glb", "res://Assets/building-l.glb",
+    "res://Assets/building-m.glb", "res://Assets/building-n.glb",
+    "res://Assets/building-skyscraper-a.glb", "res://Assets/building-skyscraper-b.glb"
+]
+var room_name = "Warri Boys"
+var room_city = "Warri"
+var room_type = "Open World"
+var room_players = 8
+var room_private = true
 
 func _ready():
     randomize()
     setup_input()
-    show_creation_screen()
+    show_loading_screen()
 
 func setup_input():
     _add_key_action("move_forward", KEY_W)
@@ -56,74 +71,390 @@ func label(text, size):
     l.add_font_size_override("font_size", size)
     return l
 
+func style_panel(color, radius = 14):
+    var s = StyleBoxFlat.new()
+    s.bg_color = color
+    s.corner_radius_top_left = radius
+    s.corner_radius_top_right = radius
+    s.corner_radius_bottom_left = radius
+    s.corner_radius_bottom_right = radius
+    s.border_width_left = 1
+    s.border_width_right = 1
+    s.border_width_top = 1
+    s.border_width_bottom = 1
+    s.border_color = Color(1, 1, 1, 0.10)
+    s.content_margin_left = 18
+    s.content_margin_right = 18
+    s.content_margin_top = 12
+    s.content_margin_bottom = 12
+    return s
+
+func make_button(parent, text, pos, size, callback, font_size = 18):
+    var b = Button.new()
+    b.text = text
+    b.rect_position = pos
+    b.rect_size = size
+    b.add_font_size_override("font_size", font_size)
+    b.add_stylebox_override("normal", style_panel(Color(0.06, 0.08, 0.12, 0.96), 10))
+    b.add_stylebox_override("hover", style_panel(Color(0.08, 0.15, 0.22, 0.98), 10))
+    b.add_stylebox_override("pressed", style_panel(Color(0.04, 0.06, 0.09, 1), 10))
+    b.connect("pressed", self, callback)
+    parent.add_child(b)
+    return b
+
+func show_loading_screen():
+    clear_screen()
+    boot_progress = 0.0
+    boot_message = "Preparing WAZOBIA..."
+    var layer = CanvasLayer.new()
+    add_child(layer)
+    var bg = ColorRect.new()
+    bg.color = Color(0.018, 0.025, 0.04, 1)
+    bg.set_anchors_and_margins_preset(Control.PRESET_FULL_RECT)
+    layer.add_child(bg)
+
+    var city_art = ColorRect.new()
+    city_art.color = Color(0.035, 0.075, 0.10, 1)
+    city_art.rect_position = Vector2(0, 0)
+    city_art.rect_size = Vector2(1280, 460)
+    bg.add_child(city_art)
+
+    var horizon = ColorRect.new()
+    horizon.color = Color(0.05, 0.18, 0.16, 0.8)
+    horizon.rect_position = Vector2(0, 360)
+    horizon.rect_size = Vector2(1280, 100)
+    city_art.add_child(horizon)
+
+    var title = label("WAZOBIA", 76)
+    title.rect_position = Vector2(72, 78)
+    bg.add_child(title)
+    var sub = label("NIGERIAN OPEN WORLD", 21)
+    sub.rect_position = Vector2(78, 162)
+    bg.add_child(sub)
+    var tip = label("EXPLORE • BUILD • RISE", 18)
+    tip.rect_position = Vector2(78, 196)
+    bg.add_child(tip)
+
+    var progress_bg = ColorRect.new()
+    progress_bg.color = Color(0.10, 0.12, 0.16, 1)
+    progress_bg.rect_position = Vector2(78, 570)
+    progress_bg.rect_size = Vector2(650, 12)
+    bg.add_child(progress_bg)
+    var progress = ColorRect.new()
+    progress.color = Color(0.78, 0.60, 0.12, 1)
+    progress.rect_position = Vector2(0, 0)
+    progress.rect_size = Vector2(10, 12)
+    progress_bg.add_child(progress)
+    var message = label(boot_message, 16)
+    message.rect_position = Vector2(78, 592)
+    bg.add_child(message)
+    var version = label("ANDROID FIRST  •  GODOT 3  •  ONLINE READY ARCHITECTURE", 13)
+    version.rect_position = Vector2(78, 660)
+    bg.add_child(version)
+
+    var timer = Timer.new()
+    timer.wait_time = 0.12
+    timer.autostart = true
+    timer.connect("timeout", self, "_loading_tick", [progress, message])
+    layer.add_child(timer)
+
+func _loading_tick(progress, message):
+    boot_progress += 0.055
+    if boot_progress < 0.25: boot_message = "Loading city systems..."
+    elif boot_progress < 0.50: boot_message = "Preparing Nigerian environment..."
+    elif boot_progress < 0.75: boot_message = "Preparing player systems..."
+    else: boot_message = "Starting WAZOBIA..."
+    progress.rect_size.x = 650.0 * min(boot_progress, 1.0)
+    message.text = boot_message
+    if boot_progress >= 1.0:
+        show_lobby()
+
+func show_lobby():
+    clear_screen()
+    var layer = CanvasLayer.new()
+    add_child(layer)
+    var bg = ColorRect.new()
+    bg.color = Color(0.018, 0.025, 0.04, 1)
+    bg.set_anchors_and_margins_preset(Control.PRESET_FULL_RECT)
+    layer.add_child(bg)
+
+    var header = ColorRect.new()
+    header.color = Color(0.035, 0.055, 0.08, 1)
+    header.rect_position = Vector2(0, 0)
+    header.rect_size = Vector2(1280, 120)
+    bg.add_child(header)
+    var title = label("WAZOBIA", 54)
+    title.rect_position = Vector2(54, 28)
+    header.add_child(title)
+    var online = label("ONLINE WORLD  •  ANDROID", 14)
+    online.rect_position = Vector2(58, 82)
+    header.add_child(online)
+
+    var profile = label("GUEST PLAYER", 16)
+    profile.rect_position = Vector2(1040, 36)
+    bg.add_child(profile)
+    var state = label("LOCAL PROFILE", 12)
+    state.rect_position = Vector2(1040, 62)
+    bg.add_child(state)
+
+    var card = Panel.new()
+    card.rect_position = Vector2(54, 155)
+    card.rect_size = Vector2(720, 430)
+    card.add_stylebox_override("panel", style_panel(Color(0.035, 0.045, 0.065, 0.98), 18))
+    bg.add_child(card)
+    var welcome = label("WELCOME TO WAZOBIA", 30)
+    welcome.rect_position = Vector2(32, 28)
+    card.add_child(welcome)
+    var copy = label("A Nigerian open-world built for exploration, missions,\nvehicles, businesses and multiplayer sessions.", 17)
+    copy.rect_position = Vector2(34, 82)
+    card.add_child(copy)
+    make_button(card, "CONTINUE", Vector2(34, 160), Vector2(300, 58), "_continue_game", 20)
+    make_button(card, "NEW GAME", Vector2(354, 160), Vector2(300, 58), "show_creation_screen", 20)
+    make_button(card, "CREATE ROOM", Vector2(34, 232), Vector2(300, 58), "show_create_room", 18)
+    make_button(card, "JOIN ROOM", Vector2(354, 232), Vector2(300, 58), "show_join_room", 18)
+    make_button(card, "FRIENDS", Vector2(34, 304), Vector2(300, 58), "show_friends", 18)
+    make_button(card, "PROFILE", Vector2(354, 304), Vector2(300, 58), "show_profile", 18)
+    make_button(card, "SETTINGS", Vector2(34, 376), Vector2(300, 42), "show_settings", 15)
+    make_button(card, "STORE", Vector2(354, 376), Vector2(300, 42), "show_store", 15)
+
+    var right = Panel.new()
+    right.rect_position = Vector2(810, 155)
+    right.rect_size = Vector2(415, 430)
+    right.add_stylebox_override("panel", style_panel(Color(0.03, 0.07, 0.075, 0.98), 18))
+    bg.add_child(right)
+    var city = label("NIGERIA", 20)
+    city.rect_position = Vector2(28, 26)
+    right.add_child(city)
+    var cities = label("LAGOS\nWARRI\nBENIN CITY\nPORT HARCOURT\nABUJA", 23)
+    cities.rect_position = Vector2(28, 70)
+    right.add_child(cities)
+    var note = label("Choose your starting city when you begin.\nMore cities can be added without changing\nyour account structure.", 15)
+    note.rect_position = Vector2(28, 260)
+    right.add_child(note)
+    var footer = label("WAZOBIA • BUILD 0.2 FOUNDATION", 12)
+    footer.rect_position = Vector2(54, 650)
+    bg.add_child(footer)
+
 func show_creation_screen():
     clear_screen()
     var layer = CanvasLayer.new()
     add_child(layer)
     var bg = ColorRect.new()
-    bg.color = Color(0.025, 0.035, 0.05, 1)
+    bg.color = Color(0.018, 0.025, 0.04, 1)
     bg.set_anchors_and_margins_preset(Control.PRESET_FULL_RECT)
     layer.add_child(bg)
-
-    var title = label("WAZOBIA", 58)
-    title.rect_position = Vector2(90, 55)
+    var title = label("CREATE YOUR CHARACTER", 42)
+    title.rect_position = Vector2(70, 52)
     bg.add_child(title)
-    var sub = label("NIGERIAN OPEN-WORLD • VERSION 1", 20)
-    sub.rect_position = Vector2(94, 120)
+    var sub = label("Choose who you are and where your story begins.", 17)
+    sub.rect_position = Vector2(74, 105)
     bg.add_child(sub)
 
-    var n = label("CHARACTER NAME", 18)
-    n.rect_position = Vector2(110, 190)
+    var n = label("CHARACTER NAME", 16)
+    n.rect_position = Vector2(90, 185)
     bg.add_child(n)
     var name_edit = LineEdit.new()
     name_edit.placeholder_text = "Enter your name"
-    name_edit.rect_position = Vector2(110, 225)
-    name_edit.rect_size = Vector2(420, 52)
+    name_edit.rect_position = Vector2(90, 215)
+    name_edit.rect_size = Vector2(430, 52)
     bg.add_child(name_edit)
 
-    var g = label("GENDER", 18)
-    g.rect_position = Vector2(110, 305)
+    var g = label("GENDER", 16)
+    g.rect_position = Vector2(90, 300)
     bg.add_child(g)
     var gender = OptionButton.new()
     gender.add_item("Male")
     gender.add_item("Female")
-    gender.rect_position = Vector2(110, 340)
+    gender.rect_position = Vector2(90, 330)
     gender.rect_size = Vector2(240, 48)
     bg.add_child(gender)
 
-    var c = label("STARTING CITY", 18)
-    c.rect_position = Vector2(610, 190)
+    var c = label("STARTING CITY", 16)
+    c.rect_position = Vector2(620, 185)
     bg.add_child(c)
     var cities = OptionButton.new()
     for city in city_data.keys(): cities.add_item(city)
-    cities.rect_position = Vector2(610, 225)
-    cities.rect_size = Vector2(400, 52)
+    cities.rect_position = Vector2(620, 215)
+    cities.rect_size = Vector2(420, 52)
     bg.add_child(cities)
-
-    var hint = label("Your character will spawn in the Nigerian city you select.", 16)
-    hint.rect_position = Vector2(610, 295)
+    var hint = label("You spawn directly into the selected Nigerian city.", 15)
+    hint.rect_position = Vector2(620, 290)
     bg.add_child(hint)
-    var start = Button.new()
-    start.text = "CREATE CHARACTER & ENTER CITY"
-    start.rect_position = Vector2(610, 345)
-    start.rect_size = Vector2(400, 65)
-    start.add_font_size_override("font_size", 20)
-    start.connect("pressed", self, "_start_game", [name_edit, gender, cities])
-    bg.add_child(start)
-
-    var info = label("PC: WASD move • SHIFT sprint • E interact/enter vehicle • F exit vehicle • SPACE shoot\nAndroid: use the on-screen controls", 15)
-    info.rect_position = Vector2(110, 560)
+    make_button(bg, "ENTER WAZOBIA", Vector2(620, 335), Vector2(420, 64), "_start_game", 20).set_meta("form", [name_edit, gender, cities])
+    var back = make_button(bg, "BACK TO LOBBY", Vector2(90, 470), Vector2(250, 52), "show_lobby", 16)
+    var info = label("Controls: WASD / keyboard • SHIFT sprint • E interact • SPACE fire\nAndroid: touch controls • PC users can play through Android emulators.", 14)
+    info.rect_position = Vector2(90, 570)
     bg.add_child(info)
-    var footer = label("WAZOBIA — original Nigerian open-world game universe", 14)
-    footer.rect_position = Vector2(110, 665)
-    bg.add_child(footer)
+    # Reconnect the generated button with its form because Godot 3 signals carry arguments.
+    var enter = bg.get_child(bg.get_child_count() - 4)
+    if enter is Button:
+        enter.disconnect("pressed", self, "_start_game") if enter.is_connected("pressed", self, "_start_game") else null
+        enter.connect("pressed", self, "_start_game", [name_edit, gender, cities])
 
 func _start_game(name_edit, gender, cities):
     player_name = name_edit.text.strip_edges()
     if player_name == "": player_name = "Player"
     player_gender = gender.get_item_text(gender.selected)
     selected_city = cities.get_item_text(cities.selected)
+    money = 50000
     spawn_city()
+
+func _continue_game():
+    var file = File.new()
+    if file.file_exists("user://wazobia_save.json") and file.open("user://wazobia_save.json", File.READ) == OK:
+        var parsed = parse_json(file.get_as_text())
+        file.close()
+        if typeof(parsed) == TYPE_DICTIONARY:
+            player_name = str(parsed.get("name", "Player"))
+            player_gender = str(parsed.get("gender", "Male"))
+            selected_city = str(parsed.get("city", "Lagos"))
+            money = int(parsed.get("money", 50000))
+            if not city_data.has(selected_city): selected_city = "Lagos"
+            spawn_city()
+            return
+    show_creation_screen()
+
+func show_create_room():
+    clear_screen()
+    var layer = CanvasLayer.new()
+    add_child(layer)
+    var bg = ColorRect.new()
+    bg.color = Color(0.018, 0.025, 0.04, 1)
+    bg.set_anchors_and_margins_preset(Control.PRESET_FULL_RECT)
+    layer.add_child(bg)
+    var title = label("CREATE ROOM", 40)
+    title.rect_position = Vector2(70, 50)
+    bg.add_child(title)
+    var note = label("Room/session foundation — multiplayer transport will connect here.", 15)
+    note.rect_position = Vector2(74, 105)
+    bg.add_child(note)
+    var name = LineEdit.new()
+    name.text = room_name
+    name.rect_position = Vector2(100, 175)
+    name.rect_size = Vector2(420, 52)
+    bg.add_child(name)
+    var city = OptionButton.new()
+    for c in city_data.keys(): city.add_item(c)
+    city.select(max(0, city_data.keys().find(room_city)))
+    city.rect_position = Vector2(100, 265)
+    city.rect_size = Vector2(420, 52)
+    bg.add_child(city)
+    var mode = OptionButton.new()
+    mode.add_item("Open World")
+    mode.add_item("Mission Co-op")
+    mode.add_item("Race")
+    mode.rect_position = Vector2(100, 355)
+    mode.rect_size = Vector2(420, 52)
+    bg.add_child(mode)
+    var players = OptionButton.new()
+    players.add_item("2 Players")
+    players.add_item("4 Players")
+    players.add_item("8 Players")
+    players.select(2)
+    players.rect_position = Vector2(100, 445)
+    players.rect_size = Vector2(420, 52)
+    bg.add_child(players)
+    var private_box = CheckButton.new()
+    private_box.text = "Friends only"
+    private_box.pressed = true
+    private_box.rect_position = Vector2(600, 265)
+    bg.add_child(private_box)
+    make_button(bg, "CREATE ROOM", Vector2(600, 345), Vector2(350, 62), "_create_room", 19)
+    make_button(bg, "BACK", Vector2(600, 430), Vector2(350, 52), "show_lobby", 16)
+    bg.set_meta("room_fields", [name, city, mode, players, private_box])
+    bg.set_meta("room_root", layer)
+
+func _create_room():
+    # The UI is deliberately separated from transport. A future authoritative
+    # server can consume these exact room fields without changing the lobby.
+    show_room_waiting("Room created", "You are the host. Invite friends and start when the server is connected.")
+
+func show_join_room():
+    clear_screen()
+    var layer = CanvasLayer.new()
+    add_child(layer)
+    var bg = ColorRect.new()
+    bg.color = Color(0.018, 0.025, 0.04, 1)
+    bg.set_anchors_and_margins_preset(Control.PRESET_FULL_RECT)
+    layer.add_child(bg)
+    var title = label("JOIN ROOM", 40)
+    title.rect_position = Vector2(70, 55)
+    bg.add_child(title)
+    var code = LineEdit.new()
+    code.placeholder_text = "ROOM CODE"
+    code.rect_position = Vector2(100, 190)
+    code.rect_size = Vector2(500, 58)
+    bg.add_child(code)
+    make_button(bg, "JOIN", Vector2(100, 280), Vector2(500, 60), "_join_room", 20)
+    make_button(bg, "BACK", Vector2(100, 365), Vector2(500, 52), "show_lobby", 16)
+    var info = label("Friends and room discovery will use the online account service when connected.", 15)
+    info.rect_position = Vector2(100, 465)
+    bg.add_child(info)
+
+func _join_room():
+    show_room_waiting("Join request", "Room transport is not connected in this prototype build yet.")
+
+func show_room_waiting(head, body_text):
+    clear_screen()
+    var layer = CanvasLayer.new()
+    add_child(layer)
+    var bg = ColorRect.new()
+    bg.color = Color(0.018, 0.025, 0.04, 1)
+    bg.set_anchors_and_margins_preset(Control.PRESET_FULL_RECT)
+    layer.add_child(bg)
+    var panel = Panel.new()
+    panel.rect_position = Vector2(290, 150)
+    panel.rect_size = Vector2(700, 420)
+    panel.add_stylebox_override("panel", style_panel(Color(0.035, 0.055, 0.08, 1), 20))
+    bg.add_child(panel)
+    var h = label(head, 32)
+    h.rect_position = Vector2(40, 38)
+    panel.add_child(h)
+    var body = label(body_text, 17)
+    body.rect_position = Vector2(42, 100)
+    panel.add_child(body)
+    var players = label("PLAYERS\nYou\n+ Invite Friend\n+ Invite Friend\n+ Invite Friend", 18)
+    players.rect_position = Vector2(42, 190)
+    panel.add_child(players)
+    make_button(panel, "START GAME", Vector2(365, 280), Vector2(280, 58), "_room_start", 18)
+    make_button(panel, "BACK TO LOBBY", Vector2(42, 350), Vector2(280, 50), "show_lobby", 15)
+
+func _room_start():
+    selected_city = room_city
+    spawn_city()
+
+func show_friends():
+    show_simple_panel("FRIENDS", "Your WAZOBIA friends list will live on the account service.\n\nONLINE\nNo connected friends yet.\n\nINVITE FRIEND\nShare a room code from the multiplayer lobby.")
+
+func show_profile():
+    show_simple_panel("PROFILE", "PLAYER\n%s\n\nSTARTING CITY\n%s\n\nBALANCE\n₦%d\n\nACCOUNT\nLocal foundation — cloud account integration is the next backend layer." % [player_name, selected_city, money])
+
+func show_settings():
+    show_simple_panel("SETTINGS", "GRAPHICS\nAndroid-first performance mode\n\nCONTROLS\nTouch + keyboard/mouse friendly\n\nAUDIO\nMusic / effects controls will be added with the production audio layer.")
+
+func show_store():
+    show_simple_panel("STORE", "WAZOBIA STORE\n\nCoins\nCharacter cosmetics\nVehicles\nProperties\nVehicle customization\nSeason content\n\nDESIGN RULE\nPurchases should not create pay-to-win advantages.\n\nGoogle Play Billing will handle Android digital purchases in the production online build.")
+
+func show_simple_panel(title_text, body_text):
+    clear_screen()
+    var layer = CanvasLayer.new()
+    add_child(layer)
+    var bg = ColorRect.new()
+    bg.color = Color(0.018, 0.025, 0.04, 1)
+    bg.set_anchors_and_margins_preset(Control.PRESET_FULL_RECT)
+    layer.add_child(bg)
+    var panel = Panel.new()
+    panel.rect_position = Vector2(240, 110)
+    panel.rect_size = Vector2(800, 500)
+    panel.add_stylebox_override("panel", style_panel(Color(0.035, 0.055, 0.08, 1), 20))
+    bg.add_child(panel)
+    var h = label(title_text, 36)
+    h.rect_position = Vector2(38, 30)
+    panel.add_child(h)
+    var body = label(body_text, 18)
+    body.rect_position = Vector2(42, 95)
+    panel.add_child(body)
+    make_button(panel, "BACK TO LOBBY", Vector2(42, 405), Vector2(280, 54), "show_lobby", 16)
 
 func spawn_city():
     clear_screen()
@@ -195,23 +526,51 @@ func create_road(pos, size, color):
     world_root.add_child(mesh)
 
 func create_buildings():
+    var index = 0
     for x in range(-70, 71, 14):
         if abs(x) < 10: continue
-        create_building(Vector3(x, rand_range(3, 7), -22), Vector3(10, rand_range(6, 14), 12))
-        create_building(Vector3(x, rand_range(3, 6), 22), Vector3(10, rand_range(6, 12), 12))
+        create_asset_building(Vector3(x, 0, -22), index)
+        index += 1
+        create_asset_building(Vector3(x, 0, 22), index)
+        index += 1
     for z in range(-65, 66, 14):
         if abs(z) < 8: continue
-        create_building(Vector3(-28, rand_range(3, 6), z), Vector3(12, rand_range(6, 12), 10))
-        create_building(Vector3(28, rand_range(3, 8), z), Vector3(12, rand_range(6, 16), 10))
+        create_asset_building(Vector3(-28, 0, z), index)
+        index += 1
+        create_asset_building(Vector3(28, 0, z), index)
+        index += 1
 
-func create_building(pos, size):
+func create_asset_building(pos, index):
+    var path = building_assets[index % building_assets.size()]
+    var packed = load(path)
+    if packed != null and packed is PackedScene:
+        var instance = packed.instance()
+        instance.translation = pos
+        var scale_factor = 1.0
+        if index % 13 == 0: scale_factor = 1.35
+        instance.scale = Vector3.ONE * scale_factor
+        world_root.add_child(instance)
+        # Keep lightweight box collisions around imported visuals for Android.
+        var body = StaticBody.new()
+        body.translation = pos
+        world_root.add_child(body)
+        var col = CollisionShape.new()
+        var shape = BoxShape.new()
+        shape.extents = Vector3(5.0 * scale_factor, 5.0 * scale_factor, 5.0 * scale_factor)
+        col.shape = shape
+        col.translation.y = 5.0 * scale_factor
+        body.add_child(col)
+    else:
+        create_building_fallback(pos, Vector3(10, rand_range(6, 14), 12))
+
+func create_building_fallback(pos, size):
     var body = StaticBody.new()
     world_root.add_child(body)
     var mesh = MeshInstance.new()
     var cube = CubeMesh.new()
     cube.size = size
     mesh.mesh = cube
-    mesh.translation = pos
+    mesh.translation = pos + Vector3(0, size.y / 2.0, 0)
     var mat = SpatialMaterial.new()
     mat.albedo_color = Color(rand_range(0.35, 0.75), rand_range(0.32, 0.68), rand_range(0.28, 0.62))
     mesh.material_override = mat
@@ -220,7 +579,7 @@ func create_building(pos, size):
     var shape = BoxShape.new()
     shape.extents = size / 2.0
     col.shape = shape
-    col.translation = pos
+    col.translation = mesh.translation
     body.add_child(col)
 
 func create_player():
@@ -321,7 +680,7 @@ func create_hud():
     var top = ColorRect.new()
     top.color = Color(0, 0, 0, 0.62)
     top.rect_position = Vector2(18, 18)
-    top.rect_size = Vector2(470, 155)
+    top.rect_size = Vector2(500, 155)
     hud.add_child(top)
     status_label = label("", 17)
     status_label.rect_position = Vector2(16, 12)
