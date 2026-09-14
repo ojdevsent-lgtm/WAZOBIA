@@ -112,19 +112,15 @@ func show_loading_screen():
     bg.color = Color(0.018, 0.025, 0.04, 1)
     bg.set_anchors_and_margins_preset(Control.PRESET_FULL_RECT)
     layer.add_child(bg)
-
     var city_art = ColorRect.new()
     city_art.color = Color(0.035, 0.075, 0.10, 1)
-    city_art.rect_position = Vector2(0, 0)
     city_art.rect_size = Vector2(1280, 460)
     bg.add_child(city_art)
-
     var horizon = ColorRect.new()
     horizon.color = Color(0.05, 0.18, 0.16, 0.8)
     horizon.rect_position = Vector2(0, 360)
     horizon.rect_size = Vector2(1280, 100)
     city_art.add_child(horizon)
-
     var title = label("WAZOBIA", 76)
     title.rect_position = Vector2(72, 78)
     bg.add_child(title)
@@ -134,7 +130,6 @@ func show_loading_screen():
     var tip = label("EXPLORE • BUILD • RISE", 18)
     tip.rect_position = Vector2(78, 196)
     bg.add_child(tip)
-
     var progress_bg = ColorRect.new()
     progress_bg.color = Color(0.10, 0.12, 0.16, 1)
     progress_bg.rect_position = Vector2(78, 570)
@@ -142,7 +137,6 @@ func show_loading_screen():
     bg.add_child(progress_bg)
     var progress = ColorRect.new()
     progress.color = Color(0.78, 0.60, 0.12, 1)
-    progress.rect_position = Vector2(0, 0)
     progress.rect_size = Vector2(10, 12)
     progress_bg.add_child(progress)
     var message = label(boot_message, 16)
@@ -151,7 +145,6 @@ func show_loading_screen():
     var version = label("ANDROID FIRST  •  GODOT 3  •  ONLINE READY ARCHITECTURE", 13)
     version.rect_position = Vector2(78, 660)
     bg.add_child(version)
-
     var timer = Timer.new()
     timer.wait_time = 0.12
     timer.autostart = true
@@ -177,10 +170,8 @@ func show_lobby():
     bg.color = Color(0.018, 0.025, 0.04, 1)
     bg.set_anchors_and_margins_preset(Control.PRESET_FULL_RECT)
     layer.add_child(bg)
-
     var header = ColorRect.new()
     header.color = Color(0.035, 0.055, 0.08, 1)
-    header.rect_position = Vector2(0, 0)
     header.rect_size = Vector2(1280, 120)
     bg.add_child(header)
     var title = label("WAZOBIA", 54)
@@ -189,14 +180,12 @@ func show_lobby():
     var online = label("ONLINE WORLD  •  ANDROID", 14)
     online.rect_position = Vector2(58, 82)
     header.add_child(online)
-
     var profile = label("GUEST PLAYER", 16)
     profile.rect_position = Vector2(1040, 36)
     bg.add_child(profile)
     var state = label("LOCAL PROFILE", 12)
     state.rect_position = Vector2(1040, 62)
     bg.add_child(state)
-
     var card = Panel.new()
     card.rect_position = Vector2(54, 155)
     card.rect_size = Vector2(720, 430)
@@ -216,7 +205,6 @@ func show_lobby():
     make_button(card, "PROFILE", Vector2(354, 304), Vector2(300, 58), "show_profile", 18)
     make_button(card, "SETTINGS", Vector2(34, 376), Vector2(300, 42), "show_settings", 15)
     make_button(card, "STORE", Vector2(354, 376), Vector2(300, 42), "show_store", 15)
-
     var right = Panel.new()
     right.rect_position = Vector2(810, 155)
     right.rect_size = Vector2(415, 430)
@@ -249,7 +237,6 @@ func show_creation_screen():
     var sub = label("Choose who you are and where your story begins.", 17)
     sub.rect_position = Vector2(74, 105)
     bg.add_child(sub)
-
     var n = label("CHARACTER NAME", 16)
     n.rect_position = Vector2(90, 185)
     bg.add_child(n)
@@ -258,7 +245,6 @@ func show_creation_screen():
     name_edit.rect_position = Vector2(90, 215)
     name_edit.rect_size = Vector2(430, 52)
     bg.add_child(name_edit)
-
     var g = label("GENDER", 16)
     g.rect_position = Vector2(90, 300)
     bg.add_child(g)
@@ -268,28 +254,24 @@ func show_creation_screen():
     gender.rect_position = Vector2(90, 330)
     gender.rect_size = Vector2(240, 48)
     bg.add_child(gender)
-
     var c = label("STARTING CITY", 16)
     c.rect_position = Vector2(620, 185)
     bg.add_child(c)
     var cities = OptionButton.new()
-    for city in city_data.keys(): cities.add_item(city)
+    for city_name in city_data.keys(): cities.add_item(city_name)
     cities.rect_position = Vector2(620, 215)
     cities.rect_size = Vector2(420, 52)
     bg.add_child(cities)
     var hint = label("You spawn directly into the selected Nigerian city.", 15)
     hint.rect_position = Vector2(620, 290)
     bg.add_child(hint)
-    make_button(bg, "ENTER WAZOBIA", Vector2(620, 335), Vector2(420, 64), "_start_game", 20).set_meta("form", [name_edit, gender, cities])
-    var back = make_button(bg, "BACK TO LOBBY", Vector2(90, 470), Vector2(250, 52), "show_lobby", 16)
+    var enter = make_button(bg, "ENTER WAZOBIA", Vector2(620, 335), Vector2(420, 64), "_start_game", 20)
+    enter.disconnect("pressed", self, "_start_game")
+    enter.connect("pressed", self, "_start_game", [name_edit, gender, cities])
+    make_button(bg, "BACK TO LOBBY", Vector2(90, 470), Vector2(250, 52), "show_lobby", 16)
     var info = label("Controls: WASD / keyboard • SHIFT sprint • E interact • SPACE fire\nAndroid: touch controls • PC users can play through Android emulators.", 14)
     info.rect_position = Vector2(90, 570)
     bg.add_child(info)
-    # Reconnect the generated button with its form because Godot 3 signals carry arguments.
-    var enter = bg.get_child(bg.get_child_count() - 4)
-    if enter is Button:
-        enter.disconnect("pressed", self, "_start_game") if enter.is_connected("pressed", self, "_start_game") else null
-        enter.connect("pressed", self, "_start_game", [name_edit, gender, cities])
 
 func _start_game(name_edit, gender, cities):
     player_name = name_edit.text.strip_edges()
@@ -361,12 +343,8 @@ func show_create_room():
     bg.add_child(private_box)
     make_button(bg, "CREATE ROOM", Vector2(600, 345), Vector2(350, 62), "_create_room", 19)
     make_button(bg, "BACK", Vector2(600, 430), Vector2(350, 52), "show_lobby", 16)
-    bg.set_meta("room_fields", [name, city, mode, players, private_box])
-    bg.set_meta("room_root", layer)
 
 func _create_room():
-    # The UI is deliberately separated from transport. A future authoritative
-    # server can consume these exact room fields without changing the lobby.
     show_room_waiting("Room created", "You are the host. Invite friends and start when the server is connected.")
 
 func show_join_room():
@@ -550,7 +528,6 @@ func create_asset_building(pos, index):
         if index % 13 == 0: scale_factor = 1.35
         instance.scale = Vector3.ONE * scale_factor
         world_root.add_child(instance)
-        # Keep lightweight box collisions around imported visuals for Android.
         var body = StaticBody.new()
         body.translation = pos
         world_root.add_child(body)
